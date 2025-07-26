@@ -1,6 +1,6 @@
 # 🤖 Personalized Placement Assistant
 
-An intelligent web application that uses the Gemini 2.5 Pro API to analyze your resume against a job description, providing detailed feedback and a downloadable PDF report.
+An intelligent web application that uses the Gemini 2.5 Pro API to analyze your resume against a job description, providing detailed feedback.
 ---
 
 ## ✨ Features
