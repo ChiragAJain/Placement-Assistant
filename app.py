@@ -6,84 +6,51 @@ import google.api_core.exceptions
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
-# Load environment variables from a .env file for local development
-load_dotenv()
 
-# --- Configuration ---
+load_dotenv()
 try:
-    # It's recommended to set the API key as an environment variable in your deployment service
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 except KeyError:
-    # This error will be raised if the API key is not set
     raise KeyError("GEMINI_API_KEY not found. Please set it in your environment variables.")
 
-# Initialize the Flask app
 app = Flask(__name__)
 
-# --- Simple In-Memory Cache (for development) ---
-# For production, consider a more robust cache like Redis or Memcached.
-# This cache will reset every time the server restarts.
+# Simple in-memory cache (resets on server restart)
 ANALYSIS_CACHE = {}
 
-# --- Helper Functions ---
 def clean_json_response(response_text):
     """
     Cleans the Gemini API response to extract the JSON object.
     The API might return the JSON string wrapped in ```json ... ```.
     """
-    # Find the start of the JSON block
     json_start = response_text.find('```json')
     if json_start != -1:
-        # Adjust start index to be after '```json'
-        json_start += 7 
-        # Find the end of the JSON block
+        json_start += 7
         json_end = response_text.rfind('```')
         if json_end != -1:
-            # Extract the JSON string
             json_str = response_text[json_start:json_end].strip()
             return json_str
-    # If not wrapped, return the original text
     return response_text.strip()
 
-
-# --- API Routes ---
 @app.route('/')
 def index():
-    """
-    Renders the main HTML page from the 'templates' folder.
-    """
+    """Renders the main HTML page from the 'templates' folder."""
     return render_template('index.html')
-
 
 @app.route('/analyze', methods=['POST'])
 def analyze_placement():
-    """
-    The core API endpoint to analyze a resume against a job description.
-    """
-    # --- 1. Receive and Validate Input ---
+    """Analyze a resume against a job description and return structured feedback."""
     if 'resume' not in request.files or not request.form.get('job_description'):
         return jsonify({"error": "Resume file or job description is missing."}), 400
-    
     resume_file = request.files['resume']
     job_description = request.form.get('job_description')
-    
-    # --- 2. Implement Caching Logic ---
-    # Read file content for caching and API call
     resume_content = resume_file.read()
-    # Reset file pointer to the beginning for potential re-reads
     resume_file.seek(0)
-    
-    # Create a unique key based on the content of the resume and job description
     cache_key = hashlib.sha256(resume_content + job_description.encode('utf-8')).hexdigest()
-
-    # Check if the result is already in the cache
     if cache_key in ANALYSIS_CACHE:
         print(f"Cache HIT! Serving stored result for key: {cache_key[:10]}...")
         return jsonify(ANALYSIS_CACHE[cache_key])
-    
     print(f"Cache MISS! Calling Gemini API for key: {cache_key[:10]}...")
-    
-    # --- 3. Define the Detailed Prompt for Gemini ---
     prompt = """
     You are an expert career advisor for the tech and finance sectors in India.
     Your task is to analyze the provided undergraduate resume against the job description and return a detailed analysis in a structured JSON format.
@@ -110,34 +77,18 @@ def analyze_placement():
     9.  `preparation_feedback`: If "Apply", an object with detailed advice on technical skills, soft skills, and potential interview questions.
     10. `resume_improvement_suggestions`: A list of specific suggestions to tailor the resume for this job.
     """
-
-    # --- 4. Call Gemini API (only if not found in cache) ---
     try:
-        # It's good practice to use a specific model version
         model = genai.GenerativeModel('gemini-2.5-pro')
-        
-        # Format the prompt with the job description
         formatted_prompt = prompt.format(job_description=job_description)
-
-        # Prepare the content for the API, including the PDF file
         contents = [
             formatted_prompt,
             {"mime_type": "application/pdf", "data": resume_content}
         ]
-
-        # Generate the content
         response = model.generate_content(contents)
-        
-        # --- 5. Process and Store the Result ---
         cleaned_json_str = clean_json_response(response.text)
         analysis_result = json.loads(cleaned_json_str)
-        
-        # Store the result in the cache
         ANALYSIS_CACHE[cache_key] = analysis_result
-        
         return jsonify(analysis_result)
-
-    # --- 6. Handle Specific Errors ---
     except google.api_core.exceptions.ResourceExhausted as e:
         print(f"Rate limit exceeded: {e}")
         return jsonify({
@@ -148,9 +99,6 @@ def analyze_placement():
         print(f"An error occurred: {e}")
         return jsonify({"error": "Failed to process the request.", "details": str(e)}), 500
 
-# --- Main Execution Block ---
 if __name__ == '__main__':
-    # For local development, debug=True is fine.
-    # IMPORTANT: For production, set debug=False.
-    # A production server like Gunicorn or uWSGI should be used instead of app.run().
+    # For local development, debug=True is fine. For production, set debug=False.
     app.run(debug=True)

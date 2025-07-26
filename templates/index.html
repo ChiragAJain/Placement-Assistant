@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Placement Assistant</title>
-    <!-- Favicon: AI emoji -->
     <link rel="icon" href="https://em-content.zobj.net/source/microsoft-teams/363/robot_1f916.png" type="image/png">
-    <!-- Tailwind CSS for styling -->
+    <link rel="icon" href="https://em-content.zobj.net/source/microsoft-teams/363/robot_1f916.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -60,10 +60,8 @@
     </style>
 </head>
 <body class="min-h-screen antialiased text-slate-300">
-
     <main class="container mx-auto px-4 py-8 md:py-12">
         <div class="w-full max-w-5xl mx-auto bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-2xl shadow-sky-900/20 ring-1 ring-white/10">
-            <!-- Header Section -->
             <div class="p-6 md:p-10 text-center border-b border-white/10">
                 <div class="w-48 h-auto mx-auto mb-4 text-sky-400">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" fill="none">
@@ -79,7 +77,7 @@
             </div>
 
             <div class="p-6 md:p-10">
-                <!-- Form Section -->
+            <!-- Form Section -->
                 <form id="analysis-form" class="space-y-8">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Resume Upload -->
@@ -121,9 +119,7 @@
                 
                 <div id="error-message" class="hidden mt-8 p-4 bg-red-900/50 text-red-300 border-l-4 border-red-500 rounded-r-lg"></div>
                 
-                <div id="results-container" class="hidden mt-12 space-y-8">
-                    <!-- Results will be dynamically inserted here -->
-                </div>
+                <div id="results-container" class="hidden mt-12 space-y-8"></div>
             </div>
         </div>
         <footer class="text-center mt-8">
@@ -151,33 +147,26 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
             resultsContainer.classList.add('hidden');
             resultsContainer.innerHTML = '';
             errorMessage.classList.add('hidden');
             errorMessage.textContent = '';
-            
             loadingSpinner.classList.remove('hidden');
             loadingSpinner.classList.add('flex');
             submitButton.disabled = true;
             buttonText.textContent = 'Analyzing...';
-
             const formData = new FormData(form);
-
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
                     body: formData
                 });
-
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.details || `Request failed with status: ${response.status}`);
                 }
-
                 const data = await response.json();
                 displayResults(data);
-
             } catch (error) {
                 console.error('Error:', error);
                 errorMessage.innerHTML = `<strong>Oops! Something went wrong.</strong><br>${error.message}`;
@@ -190,10 +179,9 @@
             }
         });
 
+        // Display the analysis results in the UI
         function displayResults(data) {
             resultsContainer.classList.remove('hidden');
-            
-            // --- Icon SVGs ---
             const icons = {
                 recommendation: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a2 2 0 0 1 1.79 1.11L15 5.88Z"/></svg>`,
                 summary: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
@@ -204,7 +192,7 @@
                 company: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3 text-orange-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`
             };
 
-            // **FIXED**: This helper function now correctly handles lists that contain objects.
+            // Helper to create a list from array data
             const createList = (items) => {
                 if (!items || items.length === 0) {
                     return '<p class="text-slate-400">None identified.</p>';
@@ -230,7 +218,7 @@
                 }).join('')}</ul>`;
             };
             
-            // Helper to create a card
+            // Helper to create a card UI block
             const createCard = (icon, title, content, customClasses = '') => {
                 return `
                     <div class="bg-slate-800/50 p-6 rounded-2xl ring-1 ring-white/10 shadow-lg shadow-black/20 fade-in ${customClasses}">
@@ -243,7 +231,7 @@
                 `;
             };
 
-            // --- Main Recommendation and Scores ---
+            // Main Recommendation and Scores
             const recommendationColor = data.recommendation === 'Apply' ? 'text-green-300' : 'text-red-300';
             const recommendationBG = data.recommendation === 'Apply' ? 'bg-green-500/10' : 'bg-red-500/10';
             const scoreColor = data.match_score >= 75 ? 'stroke-green-400' : (data.match_score >= 50 ? 'stroke-yellow-400' : 'stroke-red-400');
@@ -283,7 +271,7 @@
                 </div>
             `;
             
-            // --- Strengths and Gaps ---
+            // Strengths and Gaps
             const strengthsAndGaps = `
                 <div class="grid md:grid-cols-2 gap-8">
                     ${createCard(icons.strengths, 'Your Strengths', createList(data.strengths))}
@@ -291,10 +279,10 @@
                 </div>
             `;
             
-            // --- Resume Improvements ---
+            // Resume Improvements
             const resumeImprovements = createCard(icons.resume, 'Resume Improvement Suggestions', createList(data.resume_improvement_suggestions));
 
-            // --- Preparation Feedback ---
+            // Preparation Feedback
             let prepSection = '';
             if (data.recommendation === 'Apply' && data.preparation_feedback) {
                 const prepContent = `
@@ -316,7 +304,7 @@
                 prepSection = createCard(icons.prep, 'Interview Preparation Plan', prepContent);
             }
 
-            // --- Company Assessment ---
+            // Company Assessment
             const companyAssessmentContent = `
                 <p class="text-lg font-semibold text-slate-100">${data.company_assessment.verdict}</p>
                 <p class="text-slate-400 mt-1">${data.company_assessment.summary}</p>
