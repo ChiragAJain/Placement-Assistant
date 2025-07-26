@@ -1,27 +1,23 @@
 import os
 import json
-import hashlib # Import the hashing library
+import hashlib 
 import google.generativeai as genai
 import google.api_core.exceptions
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 # --- Configuration ---
-# Configure the Gemini API with the key from the environment variables
+
 try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 except KeyError:
-    # If the key is not found, raise an error to alert the user
     raise KeyError("GEMINI_API_KEY not found. Please set it in your .env file.")
 
-# Initialize the Flask application
 app = Flask(__name__)
 
 # --- Simple In-Memory Cache ---
-# A dictionary to store the results of previous API calls.
 ANALYSIS_CACHE = {}
 
 # --- Helper Functions ---
@@ -32,14 +28,11 @@ def clean_json_response(response_text):
     """
     json_start = response_text.find('```json')
     if json_start != -1:
-        # Adjust start position to be after '```json\n'
         json_start += 7
         json_end = response_text.rfind('```')
         if json_end != -1:
-            # Extract the JSON string
             json_str = response_text[json_start:json_end].strip()
             return json_str
-    # If no JSON block is found, assume the whole response is the JSON string
     return response_text.strip()
 
 
@@ -71,13 +64,12 @@ def analyze_placement():
     cache_key = hashlib.sha256(resume_content + job_description.encode('utf-8')).hexdigest()
 
     if cache_key in ANALYSIS_CACHE:
-        print(f"✅ Cache HIT! Serving stored result for key: {cache_key[:10]}...")
+        print(f"Cache HIT! Serving stored result for key: {cache_key[:10]}...")
         return jsonify(ANALYSIS_CACHE[cache_key])
     
-    print(f"❌ Cache MISS! Calling Gemini API for key: {cache_key[:10]}...")
+    print(f"Cache MISS! Calling Gemini API for key: {cache_key[:10]}...")
     
     # --- 3. Define the Detailed Prompt for Gemini ---
-    # This prompt is updated with 'hiring_probability' and 'company_assessment'.
     prompt = """
     You are an expert career advisor for the tech and finance sectors in India.
     Your task is to analyze the provided undergraduate resume against the job description and return a detailed analysis in a structured JSON format.
