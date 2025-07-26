@@ -5,59 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Placement Assistant</title>
     <link rel="icon" href="https://em-content.zobj.net/source/microsoft-teams/363/robot_1f916.png" type="image/png">
-    <link rel="icon" href="https://em-content.zobj.net/source/microsoft-teams/363/robot_1f916.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* Applying the Inter font and a subtle background pattern for dark mode */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* bg-slate-900 */
-            background-image:
-                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
-            background-size: 40px 40px;
-        }
-        /* Custom styles for the loading spinner in dark mode */
-        .loader {
-            border: 4px solid #334155; /* slate-700 */
-            border-radius: 50%;
-            border-top: 4px solid #38bdf8; /* sky-400 */
-            width: 48px;
-            height: 48px;
-            animation: spin 1.5s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Style for the file input in dark mode */
-        .file-input-label {
-            transition: all 0.2s ease-in-out;
-        }
-        .file-input-label:hover {
-            background-color: #1e293b; /* slate-800 */
-            border-color: #38bdf8; /* sky-400 */
-        }
-        /* Animation for results appearing */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        /* Custom prose styles for dark mode */
-        .prose-dark {
-            color: #cbd5e1; /* slate-300 */
-        }
-        .prose-dark h1, .prose-dark h2, .prose-dark h3, .prose-dark h4, .prose-dark strong {
-            color: #f1f5f9; /* slate-100 */
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="min-h-screen antialiased text-slate-300">
     <main class="container mx-auto px-4 py-8 md:py-12">
@@ -194,7 +146,16 @@
 
             // Helper to create a list from array data
             const createList = (items) => {
-                if (!items || items.length === 0) {
+                if (!items) {
+                    return '<p class="text-slate-400">None identified.</p>';
+                }
+                
+                // Ensure items is an array
+                if (!Array.isArray(items)) {
+                    return '<p class="text-slate-400">None identified.</p>';
+                }
+                
+                if (items.length === 0) {
                     return '<p class="text-slate-400">None identified.</p>';
                 }
                 
