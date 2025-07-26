@@ -1,7 +1,7 @@
 # 🤖 Personalized Placement Assistant
 
 An intelligent web application that uses the Gemini 2.5 Pro API to analyze your resume against a job description, providing detailed feedback.
----
+
 
 ## ✨ Features
 
@@ -11,15 +11,12 @@ An intelligent web application that uses the Gemini 2.5 Pro API to analyze your 
 * **Smart Caching:** Avoids redundant API calls by caching results for identical inputs, saving time and potential costs.
 * **Simple Web Interface:** Easy-to-use UI for uploading documents and viewing results instantly.
 
----
 
 ## 🛠️ Tech Stack
 
-* **Backend:** Python 3.12+ with Flask
+* **Backend:** Python 3.12 with Flask
 * **AI Model:** Google Gemini 2.5 Pro API
 * **Frontend:** HTML, CSS, Vanilla JavaScript
-
----
 
 ## 🚀 Setup and Installation
 
