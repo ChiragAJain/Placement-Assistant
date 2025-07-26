@@ -1,26 +1,23 @@
 import os
 import json
-import hashlib 
+import hashlib
 import google.generativeai as genai
 import google.api_core.exceptions
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
+
 load_dotenv()
-
-# --- Configuration ---
-
 try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 except KeyError:
-    raise KeyError("GEMINI_API_KEY not found. Please set it in your .env file.")
+    raise KeyError("GEMINI_API_KEY not found. Please set it in your environment variables.")
 
 app = Flask(__name__)
 
-# --- Simple In-Memory Cache ---
+# Simple in-memory cache (resets on server restart)
 ANALYSIS_CACHE = {}
 
-# --- Helper Functions ---
 def clean_json_response(response_text):
     """
     Cleans the Gemini API response to extract the JSON object.
@@ -35,41 +32,25 @@ def clean_json_response(response_text):
             return json_str
     return response_text.strip()
 
-
-# --- API Routes ---
 @app.route('/')
 def index():
-    """
-    Renders the main HTML page for testing the application.
-    """
+    """Renders the main HTML page from the 'templates' folder."""
     return render_template('index.html')
-
 
 @app.route('/analyze', methods=['POST'])
 def analyze_placement():
-    """
-    The core API endpoint to analyze a resume against a job description.
-    """
-    # --- 1. Receive and Validate Input ---
+    """Analyze a resume against a job description and return structured feedback."""
     if 'resume' not in request.files or not request.form.get('job_description'):
         return jsonify({"error": "Resume file or job description is missing."}), 400
-    
     resume_file = request.files['resume']
     job_description = request.form.get('job_description')
-    
-    # --- 2. Implement Caching Logic ---
     resume_content = resume_file.read()
     resume_file.seek(0)
-    
     cache_key = hashlib.sha256(resume_content + job_description.encode('utf-8')).hexdigest()
-
     if cache_key in ANALYSIS_CACHE:
         print(f"Cache HIT! Serving stored result for key: {cache_key[:10]}...")
         return jsonify(ANALYSIS_CACHE[cache_key])
-    
     print(f"Cache MISS! Calling Gemini API for key: {cache_key[:10]}...")
-    
-    # --- 3. Define the Detailed Prompt for Gemini ---
     prompt = """
     You are an expert career advisor for the tech and finance sectors in India.
     Your task is to analyze the provided undergraduate resume against the job description and return a detailed analysis in a structured JSON format.
@@ -96,29 +77,18 @@ def analyze_placement():
     9.  `preparation_feedback`: If "Apply", an object with detailed advice on technical skills, soft skills, and potential interview questions.
     10. `resume_improvement_suggestions`: A list of specific suggestions to tailor the resume for this job.
     """
-
-    # --- 4. Call Gemini API (only if not found in cache) ---
     try:
         model = genai.GenerativeModel('gemini-2.5-pro')
-        
         formatted_prompt = prompt.format(job_description=job_description)
-
         contents = [
             formatted_prompt,
             {"mime_type": "application/pdf", "data": resume_content}
         ]
-
         response = model.generate_content(contents)
-        
-        # --- 5. Process and Store the Result ---
         cleaned_json_str = clean_json_response(response.text)
         analysis_result = json.loads(cleaned_json_str)
-        
         ANALYSIS_CACHE[cache_key] = analysis_result
-        
         return jsonify(analysis_result)
-
-    # --- 6. Handle Specific Errors ---
     except google.api_core.exceptions.ResourceExhausted as e:
         print(f"Rate limit exceeded: {e}")
         return jsonify({
@@ -129,6 +99,6 @@ def analyze_placement():
         print(f"An error occurred: {e}")
         return jsonify({"error": "Failed to process the request.", "details": str(e)}), 500
 
-
 if __name__ == '__main__':
+    # For local development, debug=True is fine. For production, set debug=False.
     app.run(debug=True)

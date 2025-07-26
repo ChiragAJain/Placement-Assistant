@@ -31,3 +31,15 @@ Follow these steps to get the application running locally on your machine.
 
 ```bash
 git clone https://github.com/ChiragAJain/Placement-Assistant
+cd Placement-Assistant
+```
+
+### 3. Set Up Environment Variables
+
+Create a `.env` file in the project root:
+
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+**Note:** `.env` is in `.gitignore` and will not be committed. Keep your API key safe!
