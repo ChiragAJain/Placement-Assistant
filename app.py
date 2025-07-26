@@ -100,5 +100,7 @@ def analyze_placement():
         return jsonify({"error": "Failed to process the request.", "details": str(e)}), 500
 
 if __name__ == '__main__':
-    # For local development, debug=True is fine. For production, set debug=False.
+    # Author Note :For local development, debug=True is fine. For production, set debug=False.
     app.run(debug=True)
+
+#End
