@@ -1,92 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placement Assistant</title>
+    <title>AI Placement Assistant</title>
+    <!-- Favicon: AI emoji -->
+    <link rel="icon" href="https://em-content.zobj.net/source/microsoft-teams/363/robot_1f916.png" type="image/png">
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; background-color: #f4f7f6; color: #333; max-width: 800px; margin: 2rem auto; padding: 2rem; }
-        h1 { color: #2c3e50; }
-        form { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
-        input[type="file"], textarea { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        textarea { min-height: 200px; resize: vertical; }
-        button { background-color: #3498db; color: white; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: background-color 0.2s; }
-        button:hover:not(:disabled) { background-color: #2980b9; }
-        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        #loader { display: none; text-align: center; padding: 2rem; }
-        #results { margin-top: 2rem; background: #2c3e50; color: #fdfdfd; padding: 2rem; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-family: "Courier New", Courier, monospace; }
+        /* Applying the Inter font and a subtle background pattern for dark mode */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* bg-slate-900 */
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        /* Custom styles for the loading spinner in dark mode */
+        .loader {
+            border: 4px solid #334155; /* slate-700 */
+            border-radius: 50%;
+            border-top: 4px solid #38bdf8; /* sky-400 */
+            width: 48px;
+            height: 48px;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Style for the file input in dark mode */
+        .file-input-label {
+            transition: all 0.2s ease-in-out;
+        }
+        .file-input-label:hover {
+            background-color: #1e293b; /* slate-800 */
+            border-color: #38bdf8; /* sky-400 */
+        }
+        /* Animation for results appearing */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        /* Custom prose styles for dark mode */
+        .prose-dark {
+            color: #cbd5e1; /* slate-300 */
+        }
+        .prose-dark h1, .prose-dark h2, .prose-dark h3, .prose-dark h4, .prose-dark strong {
+            color: #f1f5f9; /* slate-100 */
+        }
     </style>
 </head>
-<body>
-    <h1>Personalized Placement Assistant</h1>
-    <p>Upload your resume (PDF) and paste a job description below to get a detailed analysis.</p>
+<body class="min-h-screen antialiased text-slate-300">
 
-    <form id="placement-form">
-        <div>
-            <label for="resume">Upload Your Resume (PDF):</label>
-            <input type="file" id="resume" name="resume" accept=".pdf" required>
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <div class="w-full max-w-5xl mx-auto bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-2xl shadow-sky-900/20 ring-1 ring-white/10">
+            <!-- Header Section -->
+            <div class="p-6 md:p-10 text-center border-b border-white/10">
+                <div class="w-48 h-auto mx-auto mb-4 text-sky-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" fill="none">
+                        <rect x="20" y="25" width="160" height="70" rx="8" stroke="currentColor" stroke-width="2" stroke-opacity="0.3"/>
+                        <path d="M50 45h100M50 60h80M50 75h50" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-opacity="0.5"/>
+                        <circle cx="160" cy="20" r="15" fill="#0f172a" stroke="currentColor" stroke-width="2"/>
+                        <path d="m155 20 3 3 5-5" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20 5H5a2 2 0 0 0-2 2v28a2 2 0 0 0 2 2h15V5Z" fill="currentColor" fill-opacity="0.3"/>
+                    </svg>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-100 tracking-tight">AI Placement Assistant</h1>
+                <p class="text-slate-400 mt-3 max-w-2xl mx-auto">Get an instant, AI-powered analysis of your resume against any job description to maximize your chances.</p>
+            </div>
+
+            <div class="p-6 md:p-10">
+                <!-- Form Section -->
+                <form id="analysis-form" class="space-y-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Resume Upload -->
+                        <div>
+                            <label for="resume" class="block text-lg font-semibold text-slate-200 mb-2">1. Upload Your Resume</label>
+                             <label for="resume" class="file-input-label flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-600 rounded-xl cursor-pointer bg-slate-800/50">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <svg class="w-10 h-10 mb-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V6a4 4 0 014-4h10a4 4 0 014 4v6a4 4 0 01-4 4H7z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 16v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16-4l-4-4m0 0l-4 4m4-4v12"></path></svg>
+                                    <p class="mb-2 text-sm text-slate-400"><span class="font-semibold text-sky-400">Click to upload</span> or drag and drop</p>
+                                    <p class="text-xs text-slate-500">PDF only (MAX. 5MB)</p>
+                                    <p id="file-name" class="text-sm text-sky-400 font-medium mt-2"></p>
+                                </div>
+                                <input type="file" id="resume" name="resume" accept=".pdf" required class="hidden">
+                            </label>
+                        </div>
+                        <!-- Job Description Input -->
+                        <div>
+                            <label for="job_description" class="block text-lg font-semibold text-slate-200 mb-2">2. Paste the Job Description</label>
+                            <textarea id="job_description" name="job_description" rows="8" required
+                                      class="w-full h-48 p-4 bg-slate-800/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition resize-none placeholder-slate-500"
+                                      placeholder="Paste the entire job description here..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center pt-4">
+                        <button type="submit"
+                                class="w-full md:w-auto bg-sky-500 text-white font-bold py-3 px-10 rounded-full hover:bg-sky-600 focus:outline-none focus:ring-4 focus:ring-sky-400/50 transition-all transform hover:scale-105 shadow-lg hover:shadow-sky-800/40">
+                            <span id="button-text">Analyze Now</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Loading and Results Section -->
+                <div id="loading-spinner" class="hidden flex-col items-center justify-center space-y-4 py-12">
+                    <div class="loader"></div>
+                    <p class="text-slate-400 font-medium text-lg">AI is analyzing your profile... This can take up to 30 seconds.</p>
+                </div>
+                
+                <div id="error-message" class="hidden mt-8 p-4 bg-red-900/50 text-red-300 border-l-4 border-red-500 rounded-r-lg"></div>
+                
+                <div id="results-container" class="hidden mt-12 space-y-8">
+                    <!-- Results will be dynamically inserted here -->
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="job_description">Paste Job Description:</label>
-            <textarea id="job_description" name="job_description" required></textarea>
-        </div>
-        <button type="submit">Analyze</button>
-    </form>
-
-    <div id="loader">
-        <p>Analyzing... This may take a moment. 🧠</p>
-    </div>
-
-    <pre id="results" style="display:none;"></pre>
+        <footer class="text-center mt-8">
+            <p class="text-slate-500 text-sm">Powered by Gemini AI</p>
+        </footer>
+    </main>
 
     <script>
-        const form = document.getElementById('placement-form');
-        const loader = document.getElementById('loader');
-        const resultsDiv = document.getElementById('results');
+        const form = document.getElementById('analysis-form');
         const resumeInput = document.getElementById('resume');
-        const jobDescInput = document.getElementById('job_description');
-        const submitButton = form.querySelector('button');
+        const fileNameDisplay = document.getElementById('file-name');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const resultsContainer = document.getElementById('results-container');
+        const errorMessage = document.getElementById('error-message');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const buttonText = document.getElementById('button-text');
 
-        function validateForm() {
-            const isResumeSelected = resumeInput.files.length > 0;
-            const isJobDescFilled = jobDescInput.value.trim() !== '';
-            submitButton.disabled = !(isResumeSelected && isJobDescFilled);
-        }
+        resumeInput.addEventListener('change', () => {
+            if (resumeInput.files.length > 0) {
+                fileNameDisplay.textContent = resumeInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        });
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent default GET submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-            loader.style.display = 'block';
-            resultsDiv.style.display = 'none';
+            resultsContainer.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            errorMessage.classList.add('hidden');
+            errorMessage.textContent = '';
+            
+            loadingSpinner.classList.remove('hidden');
+            loadingSpinner.classList.add('flex');
+            submitButton.disabled = true;
+            buttonText.textContent = 'Analyzing...';
 
             const formData = new FormData(form);
 
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
-                    body: formData,
+                    body: formData
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    resultsDiv.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    resultsDiv.textContent = `Error: ${data.error}\nDetails: ${data.details || 'N/A'}`;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.details || `Request failed with status: ${response.status}`);
                 }
+
+                const data = await response.json();
+                displayResults(data);
+
             } catch (error) {
-                resultsDiv.textContent = 'An error occurred: ' + error.message;
+                console.error('Error:', error);
+                errorMessage.innerHTML = `<strong>Oops! Something went wrong.</strong><br>${error.message}`;
+                errorMessage.classList.remove('hidden');
             } finally {
-                loader.style.display = 'none';
-                resultsDiv.style.display = 'block';
+                loadingSpinner.classList.add('hidden');
+                loadingSpinner.classList.remove('flex');
+                submitButton.disabled = false;
+                buttonText.textContent = 'Analyze Now';
             }
         });
 
-        // Initial validation and event listeners
-        validateForm();
-        resumeInput.addEventListener('change', validateForm);
-        jobDescInput.addEventListener('input', validateForm);
+        function displayResults(data) {
+            resultsContainer.classList.remove('hidden');
+            
+            // --- Icon SVGs ---
+            const icons = {
+                recommendation: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a2 2 0 0 1 1.79 1.11L15 5.88Z"/></svg>`,
+                summary: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+                strengths: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3 text-green-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+                gaps: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3 text-red-400"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+                resume: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3 text-indigo-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+                prep: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3 text-purple-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+                company: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3 text-orange-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`
+            };
+
+            // **FIXED**: This helper function now correctly handles lists that contain objects.
+            const createList = (items) => {
+                if (!items || items.length === 0) {
+                    return '<p class="text-slate-400">None identified.</p>';
+                }
+                
+                return `<ul class="space-y-2">${items.map(item => {
+                    let displayContent;
+
+                    if (typeof item === 'object' && item !== null) {
+                        // If the list item is an object, we extract its text values.
+                        // This handles cases like { "suggestion": "..." } or { "skill": "...", "reason": "..." }
+                        // by joining all the text values together.
+                        displayContent = Object.values(item).join(' - ');
+                    } else {
+                        // If the list item is already a simple string, we use it directly.
+                        displayContent = item;
+                    }
+
+                    return `<li class="flex items-start">
+                                <span class="text-sky-400 mr-2 mt-1">&#8227;</span>
+                                <span class="text-slate-300">${displayContent}</span>
+                            </li>`;
+                }).join('')}</ul>`;
+            };
+            
+            // Helper to create a card
+            const createCard = (icon, title, content, customClasses = '') => {
+                return `
+                    <div class="bg-slate-800/50 p-6 rounded-2xl ring-1 ring-white/10 shadow-lg shadow-black/20 fade-in ${customClasses}">
+                        <div class="flex items-center mb-4">
+                            ${icon}
+                            <h3 class="font-bold text-xl text-slate-100">${title}</h3>
+                        </div>
+                        <div class="prose-dark max-w-none">${content}</div>
+                    </div>
+                `;
+            };
+
+            // --- Main Recommendation and Scores ---
+            const recommendationColor = data.recommendation === 'Apply' ? 'text-green-300' : 'text-red-300';
+            const recommendationBG = data.recommendation === 'Apply' ? 'bg-green-500/10' : 'bg-red-500/10';
+            const scoreColor = data.match_score >= 75 ? 'stroke-green-400' : (data.match_score >= 50 ? 'stroke-yellow-400' : 'stroke-red-400');
+            const circumference = 2 * Math.PI * 52;
+            const offset = circumference - (data.match_score / 100) * circumference;
+
+            const mainInfo = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center fade-in">
+                    <div class="bg-slate-800/50 p-6 rounded-2xl ring-1 ring-white/10 shadow-xl shadow-black/20 text-center">
+                        <h2 class="font-bold text-xl text-slate-100 mb-4">Overall Verdict</h2>
+                        <div class="inline-flex items-center gap-4 ${recommendationBG} ${recommendationColor} font-bold text-2xl md:text-3xl px-6 py-3 rounded-full ring-1 ring-inset ring-white/10">
+                            ${icons.recommendation}
+                            <span>${data.recommendation}</span>
+                        </div>
+                        <p class="text-slate-400 mt-4 max-w-xs mx-auto">${data.summary}</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                         <div class="bg-slate-800/50 p-4 rounded-2xl ring-1 ring-white/10 shadow-lg shadow-black/20 flex flex-col justify-center items-center">
+                            <h3 class="font-bold text-slate-100 mb-2">Match Score</h3>
+                            <div class="relative w-32 h-32">
+                                <svg class="w-full h-full" viewBox="0 0 120 120">
+                                    <circle class="text-slate-700" stroke-width="10" stroke="currentColor" fill="transparent" r="52" cx="60" cy="60"/>
+                                    <circle class="transform -rotate-90 origin-center ${scoreColor}" stroke-width="10" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round" stroke="currentColor" fill="transparent" r="52" cx="60" cy="60"/>
+                                </svg>
+                                <span class="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-slate-100">${data.match_score}%</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-2xl ring-1 ring-white/10 shadow-lg shadow-black/20 flex flex-col justify-center">
+                            <h3 class="font-bold text-slate-100 mb-2">Interview Chance</h3>
+                            <p class="text-2xl font-bold text-slate-200">${data.interview_chance}</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-2xl ring-1 ring-white/10 shadow-lg shadow-black/20 flex flex-col justify-center">
+                            <h3 class="font-bold text-slate-100 mb-2">Hiring Probability</h3>
+                            <p class="text-2xl font-bold text-slate-200">${data.hiring_probability}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // --- Strengths and Gaps ---
+            const strengthsAndGaps = `
+                <div class="grid md:grid-cols-2 gap-8">
+                    ${createCard(icons.strengths, 'Your Strengths', createList(data.strengths))}
+                    ${createCard(icons.gaps, 'Identified Gaps', createList(data.gaps))}
+                </div>
+            `;
+            
+            // --- Resume Improvements ---
+            const resumeImprovements = createCard(icons.resume, 'Resume Improvement Suggestions', createList(data.resume_improvement_suggestions));
+
+            // --- Preparation Feedback ---
+            let prepSection = '';
+            if (data.recommendation === 'Apply' && data.preparation_feedback) {
+                const prepContent = `
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-slate-200">Technical Skills to Master</h4>
+                            ${createList(data.preparation_feedback.technical_skills)}
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-200">Soft Skills to Highlight</h4>
+                            ${createList(data.preparation_feedback.soft_skills)}
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-200">Potential Interview Questions</h4>
+                            ${createList(data.preparation_feedback.potential_interview_questions)}
+                        </div>
+                    </div>
+                `;
+                prepSection = createCard(icons.prep, 'Interview Preparation Plan', prepContent);
+            }
+
+            // --- Company Assessment ---
+            const companyAssessmentContent = `
+                <p class="text-lg font-semibold text-slate-100">${data.company_assessment.verdict}</p>
+                <p class="text-slate-400 mt-1">${data.company_assessment.summary}</p>
+            `;
+            const companyAssessment = createCard(icons.company, 'Company Assessment', companyAssessmentContent);
+
+            resultsContainer.innerHTML = `
+                <div class="space-y-8">
+                    ${mainInfo}
+                    <hr class="border-white/10"/>
+                    ${strengthsAndGaps}
+                    ${resumeImprovements}
+                    ${prepSection}
+                    ${companyAssessment}
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>
